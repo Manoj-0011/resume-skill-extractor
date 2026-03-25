@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skill Sync Pro</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            text-align: center;
+            color: white;
+        }
+
+        .container {
+            background: white;
+            color: black;
+            width: 400px;
+            margin: 50px auto;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        input, select, button {
+            margin: 10px;
+            padding: 10px;
+            width: 80%;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #found li {
+            background: #c8f7c5;
+            margin: 5px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #missing li {
+            background: #f7c5c5;
+            margin: 5px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .progress {
+            width: 100%;
+            background: #ddd;
+            height: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        #bar {
+            height: 10px;
+            background: green;
+            width: 0%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Skill Sync Pro</h1>
+    <p>Smart Resume Skill Analyzer</p>
+
+    <input type="file" id="fileInput">
+
+    <select id="role">
+        <option value="">Select Role</option>
+        <option value="web">Web Developer</option>
+        <option value="data">Data Analyst</option>
+        <option value="software">Software Developer</option>
+    </select>
+
+    <button onclick="analyze()">Analyze Resume</button>
+
+    <div class="results">
+        <h3>Your Skills</h3>
+        <ul id="found"></ul>
+
+        <h3>Missing Skills</h3>
+        <ul id="missing"></ul>
+
+        <h3>Match Percentage</h3>
+        <div class="progress">
+            <div id="bar"></div>
+        </div>
+
+        <p id="percent"></p>
+    </div>
+</div>
+<script>
+function normalizeText(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9+ ]/g, " ")  // remove symbols
+        .replace(/\s+/g, " ");         // remove extra spaces
+}
+
+function analyze() {
+
+    let file = document.getElementById("fileInput").files[0];
+    let role = document.getElementById("role").value;
+
+    if (!file || !role) {
+        alert("Upload resume and select role");
+        return;
+    }
+
+    let roles = {
+        web: ["html", "css", "javascript", "react"],
+        data: ["python", "sql", "excel", "power bi"],
+        software: ["java", "c++", "dsa", "oop"]
+    };
+
+    let skillPatterns = {
+        "html": /html/,
+        "css": /css/,
+        "javascript": /javascript|java script|js/,
+        "react": /react/,
+        "python": /python/,
+        "sql": /sql/,
+        "excel": /excel/,
+        "power bi": /power ?bi/,
+        "java": /\bjava\b/,
+        "c++": /c\+\+|cpp|c plus plus/,
+        "dsa": /dsa|data structures/,
+        "oop": /oop|object oriented/
+    };
+
+    let reader = new FileReader();
+
+    reader.onload = function(e) {
+        let rawText = e.target.result;
+        let text = normalizeText(rawText);
+
+        let found = [];
+
+        for (let skill in skillPatterns) {
+            if (skillPatterns[skill].test(text)) {
+                found.push(skill);
+            }
+        }
+
+        let required = roles[role];
+        let missing = [];
+
+        required.forEach(skill => {
+            if (!found.includes(skill)) {
+                missing.push(skill);
+            }
+        });
+
+        display(found, missing, required.length);
+    };
+
+    reader.readAsText(file);
+}
+
+function display(found, missing, total) {
+
+    let foundList = document.getElementById("found");
+    let missingList = document.getElementById("missing");
+
+    foundList.innerHTML = "";
+    missingList.innerHTML = "";
+
+    found.forEach(skill => {
+        let li = document.createElement("li");
+        li.innerText = skill;
+        foundList.appendChild(li);
+    });
+
+    missing.forEach(skill => {
+        let li = document.createElement("li");
+        li.innerText = skill;
+        missingList.appendChild(li);
+    });
+
+    let percent = Math.round((found.length / total) * 100);
+
+    document.getElementById("percent").innerText =
+        "Match: " + percent + "%";
+
+    document.getElementById("bar").style.width =
+        percent + "%";
+}
+</script>
